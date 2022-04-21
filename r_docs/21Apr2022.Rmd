@@ -1,19 +1,16 @@
 ---
-title: "21Apr2022"
+title: "TidyTuesday: 21Apr2022"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, include = FALSE)
 ```
 
 ```{r libraries}
 library(tidytuesdayR)
 library(lubridate)
 library(tidyverse)
-library(DataExplorer)
-if (!require(devtools)) install.packages("devtools")
-devtools::install_github("boxuancui/DataExplorer")
 ```
 Data source: https://towardsdatascience.com/the-wild-world-of-crossword-data-71d560e222f5
 
@@ -47,7 +44,7 @@ big_dave <- big_dave_orig %>%
 
 ```
 
-```{r initial_graphs}
+```{r initial_graphs, include = TRUE, message = FALSE}
 #compare average clue length on each weekday over the years
 big_dave %>% 
   group_by(puzzle_year, puzzle_day) %>% 
@@ -63,12 +60,13 @@ big_dave %>%
        fill = "")
 ```
 
-#Key Takeaways  
+# Key Takeaways  
 -Clue length appears to increase from Monday to Saturday, then drops down on Sunday   
 -Monday and Saturday clues have become markedly longer whilst Sunday clues have become much shorter  
 
-#Possible next steps
+# Possible next steps  
 -Use a better colour scheme  
+-Compare to New York Times Crossword data  
 -Compare fewer years (reduce noise)  
 -Examine weekly trends by year, for instance with line graphs  
 -Predict changes for upcoming years
