@@ -1,6 +1,6 @@
 ---
 title: "TidyTuesday: 21Apr2022"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
