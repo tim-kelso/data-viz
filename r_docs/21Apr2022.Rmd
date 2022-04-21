@@ -1,0 +1,74 @@
+---
+title: "21Apr2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r libraries}
+library(tidytuesdayR)
+library(lubridate)
+library(tidyverse)
+library(DataExplorer)
+if (!require(devtools)) install.packages("devtools")
+devtools::install_github("boxuancui/DataExplorer")
+```
+Data source: https://towardsdatascience.com/the-wild-world-of-crossword-data-71d560e222f5
+
+```{r get_data}
+# Get the Data
+tuesdata <- tidytuesdayR::tt_load('2022-04-19')
+
+big_dave <- tuesdata$big_dave
+big_dave_orig <- big_dave
+
+times <- tuesdata$times
+times_orig <- times
+```
+
+```{r inspect_data}
+head(big_dave)
+```
+
+```{r data_transformation}
+big_dave <- big_dave_orig %>% 
+  mutate(clue_Direction = as.factor(case_when(
+    str_detect(clue_number, pattern = "a") ~ "Across",
+    str_detect(clue_number, pattern = "d") ~ "Down")),
+  puzzle_day = wday(puzzle_date, label = T),
+  puzzle_year = year(puzzle_date),
+  answer_character_count = str_length(answer),
+  clue_number_only = str_extract(clue_number, "[:digit:]*"),
+  clue_text_only = str_extract(clue, ".*(?=[:blank:])"),
+  clue_character_count = str_length(clue_text_only)
+  )
+
+```
+
+```{r initial_graphs}
+#compare average clue length on each weekday over the years
+big_dave %>% 
+  group_by(puzzle_year, puzzle_day) %>% 
+  summarise(mean_clue_character_count = mean(clue_character_count, na.rm = TRUE)) %>% 
+  ggplot(aes(x = puzzle_day, y = mean_clue_character_count, group = as.factor(puzzle_year))) + 
+  geom_col(aes(fill = as.factor(puzzle_year)), position = "dodge") +
+  scale_colour_viridis_d()+
+  theme_classic()+
+  coord_cartesian(expand = FALSE, ylim = c(30,50))+
+  labs(title = "Daily Telegraph Crossword: Clue length (2009-2022)",
+       y = "Average Clue Length (Characters)",
+       x = element_blank(),
+       fill = "")
+```
+
+#Key Takeaways  
+-Clue length appears to increase from Monday to Saturday, then drops down on Sunday   
+-Monday and Saturday clues have become markedly longer whilst Sunday clues have become much shorter  
+
+#Possible next steps
+-Use a better colour scheme  
+-Compare fewer years (reduce noise)  
+-Examine weekly trends by year, for instance with line graphs  
+-Predict changes for upcoming years
