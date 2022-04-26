@@ -1,0 +1,50 @@
+---
+title: "TidyTuesday: 27Apr2022"
+author: "Tim Kelso"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = FALSE)
+```
+
+```{r libraries}
+library(tidytuesdayR)
+library(DataExplorer)
+library(lubridate)
+library(tidyverse)
+```
+Data source: https://www.kaggle.com/code/headsortails/hidden-gems-a-collection-of-underrated-notebooks/report
+
+```{r get_data}
+# Get the Data
+tuesdata <- tidytuesdayR::tt_load(2022, week = 17)
+
+hidden_gems <- tuesdata$hidden_gems
+
+hidden_gems <- tuesdata$hidden_gems
+hidden_gems_orig <- hidden_gems
+```
+
+```{r inspect_data}
+head(hidden_gems)
+```
+
+```{r data_transformation}
+
+```
+
+```{r initial_graphs, include = TRUE, message = FALSE}
+#comparison:
+```
+
+# Key Takeaways  
+-Clue length appears to increase from Monday to Saturday, then drops down on Sunday   
+-Monday and Saturday clues have become markedly longer whilst Sunday clues have become much shorter  
+
+# Possible next steps  
+-Use a better colour scheme  
+-Compare to New York Times Crossword data  
+-Compare fewer years (reduce noise)  
+-Examine weekly trends by year, for instance with line graphs  
+-Predict changes for upcoming years
