@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = FALSE, include = FALSE)
 ```{r libraries}
 library(tidytuesdayR)
 library(DataExplorer)
-library(wordcloud2)
+library(ggwordcloud)
 library(tidytext)
 library(lubridate)
 library(tidyverse)
@@ -100,7 +100,15 @@ hidden_gems_title_questions <- hidden_gems_orig %>%
 
 ```{r titles_wordcloud, include = TRUE, message = FALSE}
 #most frequently used words in Titles
-wordcloud2(data=hidden_gems_title_words, color='random-dark')
+  hidden_gems_title_words %>% 
+  filter(n >= 3) %>% 
+  ggplot((aes(label = word, size = n, col = n))) +
+  geom_text_wordcloud(seed = 3590) + 
+  labs(title = "Most Frequent Words in Title")+
+  scale_size_area(max_size = 20) +
+  scale_color_continuous(type = "viridis") +
+  theme_classic()
+  
 ```
 
 ```{r question_titles_table, include = TRUE, message = FALSE}
@@ -109,13 +117,27 @@ knitr::kable(hidden_gems_title_questions, col.names = c("Titles with questions",
 
 
 ```{r reviews_wordcloud, include = TRUE, message = FALSE}
-#most frequently used words in Titles
-wordcloud2(data=hidden_gems_review_words, color='random-dark')
+#most frequently used words in Review
+  hidden_gems_review_words %>% 
+  head(18) %>% 
+  ggplot((aes(label = word, size = n, col = n))) +
+  geom_text_wordcloud(seed = 3888) + 
+  labs(title = "Most Frequent Words in Review")+
+  scale_size_area(max_size = 20) +
+  scale_color_continuous(type = "viridis") +
+  theme_classic()
 ```
 
 ```{r authors_wordcloud, include = TRUE, message = FALSE}
 #most frequently featured Authors
-wordcloud2(data=hidden_gems_authors_count, size = 0.5, color='random-light')
+  hidden_gems_authors_count %>% 
+  filter(n >=3 ) %>% 
+  ggplot((aes(label = author_kaggle, size = n, col = n))) +
+  geom_text_wordcloud(seed = 3888) + 
+  labs(title = "Most Frequent Authors")+
+  scale_size_area(max_size = 18) +
+  scale_color_continuous(type = "viridis") +
+  theme_classic()
 ```
 
 # Key Takeaways  
@@ -125,6 +147,8 @@ wordcloud2(data=hidden_gems_authors_count, size = 0.5, color='random-light')
 -The most featured Author in Hidden Gems is jonathonbouchet with 9 reviews, followed by thedatabeast (5 reviews). Next on the list are lots of Authors with 3 reviews, with an honourable mention to captcalculator for an amazing kaggle username.  
 
 # Possible next steps  
+-Fix up colour scheme in wordclouds  
+-Improve look and feel of table  
 -Title - what are the most frequent countries included in titles?  
 -Author_twitter - how many authors have linked their twitter accounts?  
 -Author_linkedin - how many authors have linked their linkedin accounts?  
