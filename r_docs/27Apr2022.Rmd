@@ -2,6 +2,7 @@
 title: "TidyTuesday: 27Apr2022"
 author: "Tim Kelso"
 output: github_document
+always_allow_html: true
 ---
 
 ```{r setup, include=FALSE}
@@ -94,8 +95,7 @@ hidden_gems_title_questions <- hidden_gems_orig %>%
   )) %>% 
   summarise(question_count = sum(question),
             total_titles = n()) %>% 
-  mutate(questionCount_proportion = round(100*question_count/total_titles, 1)) %>% 
-  pivot_longer(cols = )
+  mutate(questionCount_proportion = round(100*question_count/total_titles, 1))
 ```
 
 ```{r titles_wordcloud, include = TRUE, message = FALSE}
