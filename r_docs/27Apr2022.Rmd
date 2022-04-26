@@ -16,8 +16,11 @@ library(tidytext)
 library(lubridate)
 library(tidyverse)
 ```
-Data source: https://www.kaggle.com/code/headsortails/hidden-gems-a-collection-of-underrated-notebooks/report
+# Background 
+## Data source
+https://www.kaggle.com/code/headsortails/hidden-gems-a-collection-of-underrated-notebooks/report
 
+## Data information
 The file of interest is kaggle_hidden_gems.csv, containing the following columns:
 
 vol and date: The consecutive number of the Hidden Gems episode and when it was first published.
@@ -34,7 +37,7 @@ author_name: The name of the Notebook author as listed on their Kaggle profile a
 
 author_twitter and author_linkedin: The social media links of the author, if listed on their Kaggle profile.
 
-notes: Notes about special episodes. 
+notes: Notes about special episodes.  
 
 
 ```{r get_data}
@@ -50,7 +53,8 @@ hidden_gems_orig <- hidden_gems
 ```{r inspect_data}
 head(hidden_gems)
 ```
-##Columns of potential interest:  
+# Analysis  
+## Columns of potential interest:  
 - author_kaggle - are there many authors with multiple Hidden Gems entries?  
 - Title - how many titles are structured as questions?  
 - Title - what are the most frequent words included in titles?  
@@ -58,7 +62,7 @@ head(hidden_gems)
 - Review - what are the most frequent words included in reviews?  
 - Author_twitter - how many authors have linked their twitter accounts?  
 - Author_linkedin - how many authors have linked their linkedin accounts?  
-- Author_linkedin & _twitter - how many authors have both, and what is the overlap?
+- Author_linkedin & _twitter - how many authors have both, and what is the overlap?  
 ```{r data_transformation}
 #create a wordcloud of Titles
 #source: https://towardsdatascience.com/create-a-word-cloud-with-r-bde3e7422e8a 
@@ -67,21 +71,61 @@ hidden_gems_title_words <- hidden_gems_orig %>%
   unnest_tokens(word, title) %>% 
   anti_join(stop_words, by = "word") %>% 
   count(word, sort = TRUE)
+
+#create a wordcloud of Review
+hidden_gems_review_words <- hidden_gems_orig %>%
+  select(review) %>%
+  mutate(review = str_replace_all(review, "https", "")) %>% 
+  unnest_tokens(word, review) %>% 
+  anti_join(stop_words, by = "word") %>% 
+  count(word, sort = TRUE)
+
+#create wordcloud of most common authors
+hidden_gems_authors_count <- hidden_gems_orig %>%
+  select(author_kaggle) %>%
+  count(author_kaggle, sort = TRUE)
+
+#how many titles are structured as questions?  ie. contain a question mark
+hidden_gems_title_questions <- hidden_gems_orig %>% 
+  select(title) %>% 
+  mutate(question = case_when(
+    str_detect(title, "\\?") ~ 1,
+    TRUE ~ 0
+  )) %>% 
+  summarise(question_count = sum(question),
+            total_titles = n()) %>% 
+  mutate(questionCount_proportion = round(100*question_count/total_titles, 1)) %>% 
+  pivot_longer(cols = )
 ```
 
-```{r initial_graphs, include = TRUE, message = FALSE}
+```{r titles_wordcloud, include = TRUE, message = FALSE}
 #most frequently used words in Titles
-wordcloud2(data=hidden_gems_title_words, size=1.6, color='random-dark')
+wordcloud2(data=hidden_gems_title_words, color='random-dark')
+```
 
+```{r question_titles_table, include = TRUE, message = FALSE}
+knitr::kable(hidden_gems_title_questions, col.names = c("Titles with questions", "Total number of Titles", "Proportion of Titles that included Questions (%) "), align = "l")
+```
+
+
+```{r reviews_wordcloud, include = TRUE, message = FALSE}
+#most frequently used words in Titles
+wordcloud2(data=hidden_gems_review_words, color='random-dark')
+```
+
+```{r authors_wordcloud, include = TRUE, message = FALSE}
+#most frequently featured Authors
+wordcloud2(data=hidden_gems_authors_count, size = 0.5, color='random-light')
 ```
 
 # Key Takeaways  
--Clue length appears to increase from Monday to Saturday, then drops down on Sunday   
--Monday and Saturday clues have become markedly longer whilst Sunday clues have become much shorter  
+-Lots of Hidden Gems titles focus on analysis, data, and exploratory data analysis (eda), which is not a huge shock! Other frequently used words include visualisation, world, learning, science, and time.  
+-Most titles (89%) did not include a question, in line with the predominance of exploratory data analysis that would not lend itself to a specific focus in such a form  
+-Reviews contain many mentions of data and visuals, with notebook and kaggle also featuring high up the list. Next on the list are detailed, survey, and analysis.  
+-The most featured Author in Hidden Gems is jonathonbouchet with 9 reviews, followed by thedatabeast (5 reviews). Next on the list are lots of Authors with 3 reviews, with an honourable mention to captcalculator for an amazing kaggle username.  
 
 # Possible next steps  
--Use a better colour scheme  
--Compare to New York Times Crossword data  
--Compare fewer years (reduce noise)  
--Examine weekly trends by year, for instance with line graphs  
--Predict changes for upcoming years
+-Title - what are the most frequent countries included in titles?  
+-Author_twitter - how many authors have linked their twitter accounts?  
+-Author_linkedin - how many authors have linked their linkedin accounts?  
+-Author_linkedin & _twitter - how many authors have both, and what is the overlap?
