@@ -1,0 +1,155 @@
+---
+title: "TidyTuesday: 27Apr2022"
+author: "Tim Kelso"
+output: github_document
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = FALSE)
+```
+
+```{r libraries}
+library(tidytuesdayR)
+library(DataExplorer)
+library(ggwordcloud)
+library(tidytext)
+library(lubridate)
+library(tidyverse)
+```
+# Background 
+## Data source
+https://www.kaggle.com/code/headsortails/hidden-gems-a-collection-of-underrated-notebooks/report
+
+## Data information
+The file of interest is kaggle_hidden_gems.csv, containing the following columns:
+
+vol and date: The consecutive number of the Hidden Gems episode and when it was first published.
+
+link_forum and link_twitter: The hyperlinks to the Kaggle Forum post and Twitter post for the episode.
+
+notebook and author: The hyperlinks to the Notebook itself, as well as to the Kaggle profile of the author.
+
+title: The Notebook title as a string.
+
+review: My brief review of the Notebook.
+
+author_name: The name of the Notebook author as listed on their Kaggle profile at the time the episode was published.
+
+author_twitter and author_linkedin: The social media links of the author, if listed on their Kaggle profile.
+
+notes: Notes about special episodes.  
+
+
+```{r get_data}
+# Get the Data
+tuesdata <- tidytuesdayR::tt_load(2022, week = 17)
+
+hidden_gems <- tuesdata$hidden_gems
+
+hidden_gems <- tuesdata$hidden_gems
+hidden_gems_orig <- hidden_gems
+```
+
+```{r inspect_data}
+head(hidden_gems)
+```
+# Analysis  
+## Columns of potential interest:  
+- author_kaggle - are there many authors with multiple Hidden Gems entries?  
+- Title - how many titles are structured as questions?  
+- Title - what are the most frequent words included in titles?  
+- Title - what are the most frequent countries included in titles?  
+- Review - what are the most frequent words included in reviews?  
+- Author_twitter - how many authors have linked their twitter accounts?  
+- Author_linkedin - how many authors have linked their linkedin accounts?  
+- Author_linkedin & _twitter - how many authors have both, and what is the overlap?  
+```{r data_transformation}
+#create a wordcloud of Titles
+#source: https://towardsdatascience.com/create-a-word-cloud-with-r-bde3e7422e8a 
+hidden_gems_title_words <- hidden_gems_orig %>%
+  select(title) %>%
+  unnest_tokens(word, title) %>% 
+  anti_join(stop_words, by = "word") %>% 
+  count(word, sort = TRUE)
+
+#create a wordcloud of Review
+hidden_gems_review_words <- hidden_gems_orig %>%
+  select(review) %>%
+  mutate(review = str_replace_all(review, "https", "")) %>% 
+  unnest_tokens(word, review) %>% 
+  anti_join(stop_words, by = "word") %>% 
+  count(word, sort = TRUE)
+
+#create wordcloud of most common authors
+hidden_gems_authors_count <- hidden_gems_orig %>%
+  select(author_kaggle) %>%
+  count(author_kaggle, sort = TRUE)
+
+#how many titles are structured as questions?  ie. contain a question mark
+hidden_gems_title_questions <- hidden_gems_orig %>% 
+  select(title) %>% 
+  mutate(question = case_when(
+    str_detect(title, "\\?") ~ 1,
+    TRUE ~ 0
+  )) %>% 
+  summarise(question_count = sum(question),
+            total_titles = n()) %>% 
+  mutate(questionCount_proportion = round(100*question_count/total_titles, 1))
+```
+
+```{r titles_wordcloud, include = TRUE, message = FALSE}
+#most frequently used words in Titles
+  hidden_gems_title_words %>% 
+  filter(n >= 3) %>% 
+  ggplot((aes(label = word, size = n, col = n))) +
+  geom_text_wordcloud(seed = 3590) + 
+  labs(title = "Most Frequent Words in Title")+
+  scale_size_area(max_size = 20) +
+  scale_color_continuous(type = "viridis") +
+  theme_void()
+  
+```
+
+```{r question_titles_table, include = TRUE, message = FALSE}
+knitr::kable(hidden_gems_title_questions, col.names = c("Titles with questions", "Total number of Titles", "Proportion of Titles that included Questions (%) "), align = "l")
+```
+
+
+```{r reviews_wordcloud, include = TRUE, message = FALSE}
+#most frequently used words in Review
+  hidden_gems_review_words %>% 
+  head(18) %>% 
+  ggplot((aes(label = word, size = n, col = n))) +
+  geom_text_wordcloud(seed = 3888) + 
+  labs(title = "Most Frequent Words in Review")+
+  scale_size_area(max_size = 20) +
+  scale_color_continuous(type = "viridis") +
+  theme_void()
+```
+
+```{r authors_wordcloud, include = TRUE, message = FALSE}
+#most frequently featured Authors
+  hidden_gems_authors_count %>% 
+  filter(n >=3 ) %>% 
+  ggplot((aes(label = author_kaggle, size = n, col = n))) +
+  geom_text_wordcloud(seed = 3888) + 
+  labs(title = "Most Frequent Authors")+
+  scale_size_area(max_size = 18) +
+  scale_color_continuous(type = "viridis") +
+  theme_void()
+```
+
+# Key Takeaways  
+-Lots of Hidden Gems titles focus on analysis, data, and exploratory data analysis (eda), which is not a huge shock! Other frequently used words include visualisation, world, learning, science, and time.  
+-Most titles (89%) did not include a question, in line with the predominance of exploratory data analysis that would not lend itself to a specific focus in such a form  
+-Reviews contain many mentions of data and visuals, with notebook and kaggle also featuring high up the list. Next on the list are detailed, survey, and analysis.  
+-The most featured Author in Hidden Gems is jonathonbouchet with 9 reviews, followed by thedatabeast (5 reviews). Next on the list are lots of Authors with 3 reviews, with an honourable mention to captcalculator for an amazing kaggle username.  
+
+# Possible next steps  
+-Fix up colour scheme in wordclouds  
+-Improve look and feel of table  
+-Title - what are the most frequent countries included in titles?  
+-Author_twitter - how many authors have linked their twitter accounts?  
+-Author_linkedin - how many authors have linked their linkedin accounts?  
+-Author_linkedin & _twitter - how many authors have both, and what is the overlap?
