@@ -1,0 +1,78 @@
+---
+title: "TidyTuesday: 5May2022"
+author: "Tim Kelso"
+output: github_document
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = FALSE)
+```
+
+```{r libraries}
+library(tidytuesdayR)
+library(DataExplorer)
+library(tidytext)
+library(lubridate)
+library(tidyverse)
+```
+# Background 
+## Data source
+https://emp.lbl.gov/utility-scale-solar
+
+## Data information
+Berkeley Lab’s “Utility-Scale Solar, 2021 Edition” presents analysis of empirical plant-level data from the U.S. fleet of ground-mounted photovoltaic (PV), PV+battery, and concentrating solar-thermal power (CSP) plants with capacities exceeding 5 MWAC. While focused on key developments in 2020, this report explores trends in deployment, technology, capital and operating costs, capacity factors, the levelized cost of solar energy (LCOE), power purchase agreement (PPA) prices, and wholesale market value.
+
+
+```{r get_data}
+# Get the Data
+tuesdata <- tidytuesdayR::tt_load(2022, week = 18)
+
+capacity_orig <- tuesdata$capacity
+wind_orig <- tuesdata$wind
+solar_orig <- tuesdata$solar
+average_cost_orig <- tuesdata$average_cost
+```
+
+```{r inspect_data}
+head(capacity)
+```
+
+#Initial thoughts
+- Capacity: Time series data of power generation capacity, from 2014-2020, for solar, wind, storage, gas, nuclear, coal, other.  
+- Average_cost: Average cost of gas, solar, wind per mWh from 2014-2020 (table needs pivot_longer)  
+- Wind: Cost and capacity, with a more granular time scale  
+- Solar: Cost and capacity, with a more granular time scale  
+
+# Analysis  
+## Columns of potential interest:  
+- Simple line graph of gas vs solar vs wind from 2014-2020 (average_cost)  
+- Comparison of average cost vs capacity for gas, solar, wind (capacity, average_cost)  
+- ?  
+- ?  
+- ?  
+- ?  
+- ?  
+- ?  
+
+## Graphs
+```{r data_transformation}
+average_cost <- average_cost_orig %>% 
+  pivot_longer()
+```
+
+```{r graph_, include = TRUE, message = FALSE}
+
+```
+
+# Key Takeaways  
+-  
+-  
+-  
+- 
+
+# Possible next steps  
+-  
+-  
+-  
+-  
