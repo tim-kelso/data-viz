@@ -1,6 +1,7 @@
 ---
-title: "TidyTuesday: 5May2022"
-author: "Tim Kelso"
+title: "Solar/Wind utilities in USA: TidyTuesday Week 18, 2022"
+author: "Tim Kelso"  
+date: "`r format(Sys.time(), '%d %B, %Y')`"  
 output: github_document
 always_allow_html: true
 ---
@@ -34,45 +35,70 @@ solar_orig <- tuesdata$solar
 average_cost_orig <- tuesdata$average_cost
 ```
 
-```{r inspect_data}
-head(capacity)
-```
-
-#Initial thoughts
-- Capacity: Time series data of power generation capacity, from 2014-2020, for solar, wind, storage, gas, nuclear, coal, other.  
+# Initial thoughts  
+## Data  
+- Capacity: Time series data of power generation capacity, from 2014-2020, for solar, wind, storage, gas, nuclear, coal, other. _prior and _new are cumulative totals?  
 - Average_cost: Average cost of gas, solar, wind per mWh from 2014-2020 (table needs pivot_longer)  
 - Wind: Cost and capacity, with a more granular time scale  
 - Solar: Cost and capacity, with a more granular time scale  
 
+## Key questions  
+1. How has capacity and average cost of energy generation changed from 2014-2020?  
+2. Is there a correlation between the capacity of energy sources (wind, solar, gas) and average cost?  
+
 # Analysis  
-## Columns of potential interest:  
-- Simple line graph of gas vs solar vs wind from 2014-2020 (average_cost)  
+## Graphs of potential interest  
+- Simple line graph of gas vs solar vs wind total capacity from 2014-2020 (capacity)  
+- Simple line graph of gas vs solar vs wind average_cost from 2014-2020 (average_cost)  
 - Comparison of average cost vs capacity for gas, solar, wind (capacity, average_cost)  
-- ?  
-- ?  
-- ?  
-- ?  
-- ?  
-- ?  
+- Standalone prior vs standalone new over time for solar, wind, storage, gas, nuclear, coal, other (capacity)  
+- Hybrid prior vs hybrid new for solar, wind, storage, gas, nuclear, coal, other (capacity)  
+
 
 ## Graphs
 ```{r data_transformation}
+capacity <- capacity_orig %>% 
+  pivot_longer(cols = c(standalone_prior:total_gw), names_to = "measure", values_to = "Capacity(GW)") %>% 
+  mutate(measure = as.factor(measure))
+
 average_cost <- average_cost_orig %>% 
-  pivot_longer()
+  rename(gas = gas_mwh, solar = solar_mwh, wind = wind_mwh) %>% 
+  pivot_longer(cols = c(gas:wind), names_to = "source", values_to = "dollars_per_MWh") %>% 
+  mutate(source = as.factor(source))
 ```
 
-```{r graph_, include = TRUE, message = FALSE}
-
+```{r plot_capacity_over_time, include = TRUE, message = FALSE}
+capacity %>% 
+  filter(measure == "total_gw") %>% 
+  ggplot(aes(x = year, y = `Capacity(GW)`, grouping = type)) +
+  theme_classic() +
+  labs(title = "Energy generation capacity in the USA",
+       x = element_blank()) +
+  geom_line(aes(colour = type), size = 1) + 
+  scale_colour_viridis_d("Power Type", option = "magma") +
+  coord_cartesian(expand = FALSE) +
+  geom_label(x = 2019, y = 425, color = "#FF9999", size = 3.5, label = "Solar capacity has risen steadily since 2015", hjust = 1)
+```
+```{r plot_cost_over_time, include = TRUE, message = FALSE}
+average_cost %>% 
+  ggplot(aes(x = year, y = dollars_per_MWh,grouping = source)) +
+  theme_classic() +
+  labs(title = "Average cost of generating power ($/MWh) in the USA",
+       x = element_blank(),
+       y = "$/MWh") +
+  geom_line(aes(colour = source), size = 1) + 
+  scale_colour_viridis_d("Power Type", option = "inferno") +
+  scale_x_continuous(breaks=seq(2009, 2021, 2)) +
+  coord_cartesian(expand = FALSE) +
+  geom_label(x = 2010, y = 153, color = "#FF9999", size = 3.5, label = str_wrap("Cost of generating solar power has dropped dramatically since 2009 and is now lower than gas and wind", 50), hjust = 0)
 ```
 
 # Key Takeaways  
--  
--  
--  
-- 
+-  Solar power capacity has risen sharply against all other forms since 2014, whilst it's average cost has dropped dramatically since 2009 and is now lower than gas and wind  
+- Wind power capacity has stagnated since 2018, matched by an increased cost in generating this type of energy during this period
+-  Cost of gas power generation has decreased since 2009, despite reduced gas power capacity since 2014  
 
 # Possible next steps  
--  
--  
--  
--  
+- Improve visuals of graphs - colours, font, label doesn't really stand out  
+- Visualise capacity vs average cost for solar, wind, and gas  
+- Take a deeper look at recent solar and wind trends using more detailed data from individual days/months
