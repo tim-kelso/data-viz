@@ -1,0 +1,95 @@
+---
+title: "TidyTuesday Week 19: NYT Bestsellers"
+author: "Tim Kelso"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: github_document
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = FALSE)
+```
+
+```{r libraries}
+library(tidytuesdayR)
+library(DataExplorer)
+library(lubridate)
+library(tidyverse)
+```
+# Background 
+## Data source  
+Data from Post45 Data (https://data.post45.org/wp-content/uploads/2022/01/NYT-Data-Description.pdf)
+## Data information  
+Fiction bestseller list between 1931 and 2020.
+Each row of the dataset is a single "entry" on the list - single slot for a single week
+
+*nyt_full.tsv* 
+- year: the year of appearance  
+- week: the weekly issue of the bestseller list 
+- rank: the book's rank on the list for that week  
+- title_id: a unique ID mapping titles to the nyt_titles spreadsheet  
+- title: title of the novel, as reported by the New York Times  
+- author: author of the novel, as reported by the New York Times  
+
+*nyt_titles.tsv*
+- id: an arbitrary unique id for the novel  
+- title: the title of the novel, as reported by the New York Times  
+- author: the author of the novel, as reported by the New York Times  
+- year: the first year that the novel appears on the bestseller list. Note that this year may be different from the publication year.  
+- total_weeks: the total number of weeks the title was on the list 
+- first_week: the first week that the novel appears on the bestseller list 
+- debut_rank: the book's bestseller rank in the week of its first appearance
+- best_rank: the highest rank achieved by the title while on the list  
+
+```{r get_data}
+# Get the Data
+nyt_titles_orig <- readr::read_tsv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-05-10/nyt_titles.tsv')
+
+nyt_full_orig <- readr::read_tsv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-05-10/nyt_full.tsv')
+
+```
+
+```{r inspect_data}
+head(nyt_full_orig)
+```
+
+# Analysis  
+##Initial thoughts  
+- What is the average title length? Does this change over time?   
+- Do shorter/longer titles stay longer on the list?    
+- Who is the most prolific author since 1931?  
+-   
+
+
+## Tables/Columns of potential interest:  
+- Line graph - average title length by year (nyt_full)  
+- total weeks by title length (nyt_titles)  
+- Wordcloud of author frequency in total weeks (nyt_full)  
+  
+
+
+```{r data_transformation}
+
+```
+
+## Graphs  
+```{r graph1_, include = TRUE, message = FALSE}
+
+```
+
+
+```{r graph2_, include = TRUE, message = FALSE}
+
+```
+
+# Key Takeaways  
+-  
+-  
+-  
+- 
+
+# Possible next steps  
+-  
+-  
+-  
+-  

@@ -1,0 +1,77 @@
+---
+title: "TidyTuesday Week xx: Title"
+author: "Tim Kelso"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: github_document
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = FALSE)
+```
+
+```{r libraries}
+library(tidytuesdayR)
+library(DataExplorer)
+library(lubridate)
+library(tidyverse)
+```
+# Background 
+## Data source
+
+## Data information
+
+
+```{r get_data}
+# Get the Data
+tuesdata <- tidytuesdayR::tt_load(2022, week = )
+
+_orig <- tuesdata$
+
+```
+
+```{r inspect_data}
+head()
+```
+
+# Analysis  
+##Initial thoughts  
+-   
+-   
+-   
+-   
+
+
+## Tables/Columns of potential interest:  
+-  
+-   
+-  
+-   
+  
+
+
+```{r data_transformation}
+
+```
+
+## Graphs  
+```{r graph1_, include = TRUE, message = FALSE}
+
+```
+
+
+```{r graph2_, include = TRUE, message = FALSE}
+
+```
+
+# Key Takeaways  
+-  
+-  
+-  
+- 
+
+# Possible next steps  
+-  
+-  
+-  
+-  
