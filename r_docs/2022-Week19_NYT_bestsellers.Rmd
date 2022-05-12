@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = FALSE, include = FALSE)
 
 ```{r libraries}
 library(tidytuesdayR)
+library(extrafont)
 library(DataExplorer)
 library(ggwordcloud)
 library(tidytext)
@@ -74,7 +75,35 @@ head(nyt_full_orig)
 ```
 
 ## Graphs  
-```{r graph1_title_length, include = TRUE, message = FALSE}
+```{r graph_most_common_words, include = TRUE, message = FALSE, warning = FALSE}
+#create a wordcloud of Titles
+nyt_titles_orig %>%
+  select(title) %>%
+  unnest_tokens(word, title) %>% 
+  anti_join(stop_words, by = "word") %>% 
+  count(word, sort = TRUE) %>% 
+  head(400) %>% #take top 400
+  ggplot((aes(label = word, size = n, col = n))) +
+  geom_text_wordcloud(seed = 3590, family = "Gill Sans MT") + 
+  labs(title = "Most Common Words in NYT Bestsellers Titles")+
+  scale_color_distiller(palette="Dark2") +
+  theme_void()
+```
+
+```{r graph_bestselling_authors_by_total_weeks, include = TRUE, message = FALSE}
+nyt_titles_orig %>% 
+  group_by(author) %>% 
+  summarise(author_total_weeks = sum(total_weeks)) %>% 
+  arrange(desc(author_total_weeks)) %>% 
+  head(200) %>% #take top 200 ()
+  ggplot((aes(label = author, size = author_total_weeks, col = author_total_weeks))) +
+  geom_text_wordcloud(seed = 3590, family = "Gill Sans MT") + 
+  labs(title = "Bestselling Authors by Total Number of Weeks in Bestsellers List")+
+  scale_color_distiller(palette="Dark2") +
+  theme_void()
+```
+
+```{r graph_title_length, include = TRUE, message = FALSE}
 nyt_titles_orig %>% 
   mutate(title_length = str_length(title)) %>% 
   ggplot(aes(x = title_length)) +
@@ -89,7 +118,7 @@ nyt_titles_orig %>%
   coord_cartesian(expand = F)
 ```
 
-```{r graph2_average_title_length_by_year, include = TRUE, message = FALSE}
+```{r graph_average_title_length_by_year, include = TRUE, message = FALSE}
 nyt_titles_orig %>% 
   mutate(title_length = str_length(title)) %>% 
   group_by(year) %>% 
@@ -104,7 +133,7 @@ nyt_titles_orig %>%
        y = "Average Title Length (characters)")
 ```
 
-```{r graph3_title_length_by_total_weeks, include = TRUE, message = FALSE}
+```{r graph_title_length_by_total_weeks, include = TRUE, message = FALSE}
 nyt_titles_orig %>% 
   mutate(title_length = str_length(title)) %>% 
   ggplot(aes(x = title_length, y = total_weeks)) +
@@ -115,32 +144,8 @@ nyt_titles_orig %>%
        x = "Title Length (characters)",
        y = "Time in Bestseller List (weeks)")
 ```
-```{r graph4_bestselling_authors_by_total_weeks, include = TRUE, message = FALSE}
-nyt_titles_orig %>% 
-  group_by(author) %>% 
-  summarise(author_total_weeks = sum(total_weeks)) %>% 
-  arrange(desc(author_total_weeks)) %>% 
-  head(200) %>% #take top 200 ()
-  ggplot((aes(label = author, size = author_total_weeks, col = author_total_weeks))) +
-  geom_text_wordcloud(seed = 3590) + 
-  labs(title = "Bestselling Authors by Total Number of Weeks in Bestsellers List")+
-  scale_color_viridis_c(option = "viridis") +
-  theme_void()
-```
-```{r graph5_most_common_words, include = TRUE, message = FALSE, warning = FALSE}
-#create a wordcloud of Titles
-nyt_titles_orig %>%
-  select(title) %>%
-  unnest_tokens(word, title) %>% 
-  anti_join(stop_words, by = "word") %>% 
-  count(word, sort = TRUE) %>% 
-  head(400) %>% #take top 400
-  ggplot((aes(label = word, size = n, col = n))) +
-  geom_text_wordcloud(seed = 3590) + 
-  labs(title = "Most Common Words in Bestsellers Titles")+
-  scale_color_viridis_c(option = "viridis") +
-  theme_void()
-```
+
+
 
 # Key Takeaways  
 - Average title length of NYT bestseller books is ~15 characters (1931-2020)  

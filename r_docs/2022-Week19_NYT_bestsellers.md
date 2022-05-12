@@ -1,7 +1,7 @@
 TidyTuesday Week 19: NYT Bestsellers
 ================
 Tim Kelso
-11 May, 2022
+12 May, 2022
 
 # Background
 
@@ -48,13 +48,15 @@ the list
 
 ## Graphs
 
-![](2022-Week19_NYT_bestsellers_files/figure-gfm/graph1_title_length-1.png)<!-- -->
+![](2022-Week19_NYT_bestsellers_files/figure-gfm/graph_most_common_words-1.png)<!-- -->
 
-![](2022-Week19_NYT_bestsellers_files/figure-gfm/graph2_average_title_length_by_year-1.png)<!-- -->
+![](2022-Week19_NYT_bestsellers_files/figure-gfm/graph_bestselling_authors_by_total_weeks-1.png)<!-- -->
 
-![](2022-Week19_NYT_bestsellers_files/figure-gfm/graph3_title_length_by_total_weeks-1.png)<!-- -->
-![](2022-Week19_NYT_bestsellers_files/figure-gfm/graph4_bestselling_authors_by_total_weeks-1.png)<!-- -->
-![](2022-Week19_NYT_bestsellers_files/figure-gfm/graph5_most_common_words-1.png)<!-- -->
+![](2022-Week19_NYT_bestsellers_files/figure-gfm/graph_title_length-1.png)<!-- -->
+
+![](2022-Week19_NYT_bestsellers_files/figure-gfm/graph_average_title_length_by_year-1.png)<!-- -->
+
+![](2022-Week19_NYT_bestsellers_files/figure-gfm/graph_title_length_by_total_weeks-1.png)<!-- -->
 
 # Key Takeaways
 
