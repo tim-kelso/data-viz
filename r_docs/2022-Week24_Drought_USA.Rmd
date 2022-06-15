@@ -1,0 +1,151 @@
+---
+title: "TidyTuesday Week 24: Drought Conditions in the US"
+author: "Tim Kelso"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: github_document
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = FALSE)
+```
+
+```{r libraries}
+library(tidytuesdayR)
+library(extrafont)
+library(DataExplorer)
+library(tidycensus) #to retrieve FIPS codes
+library(tigris) #to download geographic boundaries from US Census Bureau
+library(sf)
+library(gganimate)
+library(gifski)
+library(lubridate)
+library(tidyverse)
+```
+# Background 
+## Data source  
+Data from National Integrated Drought Information System (https://www.drought.gov/).  
+
+## Data information  
+*drought.csv*
+The Standardized Precipitation Index (SPI) is an index to characterize meteorological drought on a range of timescales, ranging from 1 to 72 months, for the lower 48 U.S. states. The SPI is the number of standard deviations that observed cumulative precipitation deviates from the climatological average. NOAA's National Centers for Environmental Information produce the 9-month SPI values below on a monthly basis, going back to 1895.
+**(From https://www.drought.gov/historical-information?dataset=1&selectedDateUSDM=20110301&selectedDateSpi=19580901)**
+
+*drought_fips.csv*
+The Drought Severity and Coverage Index is an experimental method for converting drought levels from the U.S. Drought Monitor map to a single value for an area. DSCI values are part of the U.S. Drought Monitor data tables. Possible values of the DSCI are from 0 to 500. Zero means that none of the area is abnormally dry or in drought, and 500 means that all of the area is in D4, exceptional drought.
+
+FIPS id: first two digits = state, last 3 digits = county
+https://walker-data.com/tidycensus/reference/fips_codes.html
+
+```{r get_data}
+# Get the Data
+drought_orig <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-06-14/drought.csv')
+drought_fips_orig <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-06-14/drought-fips.csv')
+```
+
+```{r inspect_data}
+head(drought_fips_orig)
+```
+
+# Analysis  
+## Initial thoughts  
+- What state has endured the most/least drought since 2000?  
+- Map of average DSCI for each state (heatmap) from 2000 - 2022
+- Extra credit: in which state/county have the most people been affected by drought?  
+
+
+## Tables/Columns of potential interest:  
+- FIPS: separate into state (first two digits) and county (last three digits)    
+- DSCI: measure of drought severity in an area  
+  
+
+
+```{r data_transformation}
+#get shapefile data for all US states
+drought_fips_yearlyAverage_state <- drought_fips_orig %>% 
+  mutate(Year = year(date)) %>% 
+  group_by(State, Year) %>% 
+  summarise(Avg_DSCI = mean(DSCI, na.rm = TRUE)) %>% 
+  left_join(fips_codes %>% distinct(state, state_name), by = c("State" = "state"))  #add state full name
+
+drought_fips_yearlyAverage_county <- drought_fips_orig %>% 
+  mutate(Year = year(date)) %>% 
+  group_by(FIPS, Year) %>% 
+  summarise(Avg_DSCI = mean(DSCI, na.rm = TRUE)) %>% 
+  mutate(FIPS_state = str_extract(FIPS, "^[:digit:]{2}"),
+         FIPS_county = str_extract(FIPS, "[:digit:]{3}$")) %>% 
+  left_join(fips_codes, by = c("FIPS_state" = "state_code", "FIPS_county" = "county_code"))  #add county full name
+
+states <- states(cb = TRUE, class = "sf") %>% 
+  filter(!as.numeric(STATEFP) %in% c(2, 15, 60, 66, 69, 72, 78)) # lower 48 only
+  
+counties <- counties(cb = TRUE, class = "sf") %>% 
+  filter(!as.numeric(STATEFP) %in% c(2, 15, 60, 66, 69, 72, 78)) # lower 48 only
+```
+
+## Graphs  
+```{r graph_USmap_2022_DSCI_byState, include = TRUE, message = FALSE, warning = FALSE}
+#create a US map and plot average DSCI in 2022
+states %>% 
+  left_join(drought_fips_yearlyAverage_state, by = c("NAME" = "state_name")) %>% 
+  filter(Year == 2022) %>% 
+  ggplot(aes(fill = Avg_DSCI)) + 
+  labs(title = "2022 Average Drought Severity and Coverage Index (DSCI) by US State") +
+  geom_sf() +
+  scale_fill_continuous(type = "viridis") +
+  theme_bw() 
+```
+
+```{r graph_USmap_2022_DSCI_byCounty, include = TRUE, message = FALSE}
+counties %>% 
+  left_join(drought_fips_yearlyAverage_county, by = c("NAME" = "state_name")) %>% 
+  filter(Year == 2022) %>% 
+  ggplot(aes(fill = Avg_DSCI)) + 
+  labs(title = "2022 Average Drought Severity and Coverage Index (DSCI) by US State County") +
+  geom_sf() +
+  scale_fill_continuous(type = "viridis")
+```
+
+```{r graph_USmap_timelapse_DSCI_byState, include = TRUE, message = FALSE, warning = FALSE}
+#create a US map and plot average DSCI 2000-2022
+USmap_timelapse_DSCI_byState <- states %>% 
+  left_join(drought_fips_yearlyAverage_state, by = c("NAME" = "state_name")) %>% 
+  ggplot(aes(fill = Avg_DSCI)) + 
+ # labs(title = "2022 Average Drought Severity and Coverage Index (DSCI) by US State") +
+  geom_sf() +
+  scale_fill_continuous(type = "viridis") +
+  theme_bw() +
+  transition_states(Year, transition_length = 1, state_length = 2) +
+  labs(title = "Average Drought Severity and Coverage Index (DSCI) by US State",
+       subtitle = "Year: {closest_state}")
+
+animate(USmap_timelapse_DSCI_byState, renderer = gifski_renderer(), duration = 20, start_pause = 2, end_pause = 2)
+```
+
+```{r graph_USmap_timelapse_DSCI_byCounty, include = TRUE, message = FALSE, warning = FALSE}
+#create a US map and plot average DSCI 2000-2022
+USmap_timelapse_DSCI_byCounty <- states %>% 
+  left_join(drought_fips_yearlyAverage_county, by = c("NAME" = "state_name")) %>% 
+  ggplot(aes(fill = Avg_DSCI)) + 
+ # labs(title = "2022 Average Drought Severity and Coverage Index (DSCI) by US State") +
+  geom_sf() +
+  scale_fill_continuous(type = "viridis") +
+  theme_bw() +
+  transition_states(Year, transition_length = 1, state_length = 3) +
+  labs(title = "Average Drought Severity and Coverage Index (DSCI) by US County",
+       subtitle = "Year: {closest_state}")
+
+animate(USmap_timelapse_DSCI_byCounty, renderer = gifski_renderer(), duration = 20)
+```
+
+
+
+
+# Key Takeaways  
+- Drought intensity varies greatly by state and year
+- California has experienced some of the most intense droughts since 2000  
+- In some years, drought is widespread. In other years, it is more localised.
+
+# Possible next steps  
+- Examine/visualise data at monthly average drought intensity rather than current annual average
+- Integration of population data - where are the most people affected by drought?  
