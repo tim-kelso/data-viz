@@ -50,9 +50,6 @@ FIPS id: first two digits = state, last 3 digits = county
 ## Graphs
 
 ![](2022-Week24_Drought_USA_files/figure-gfm/graph_USmap_2022_DSCI_byState-1.png)<!-- -->
-
-![](2022-Week24_Drought_USA_files/figure-gfm/graph_USmap_2022_DSCI_byCounty-1.png)<!-- -->
-
 ![](2022-Week24_Drought_USA_files/figure-gfm/graph_USmap_timelapse_DSCI_byState-1.gif)<!-- -->
 
 # Key Takeaways
