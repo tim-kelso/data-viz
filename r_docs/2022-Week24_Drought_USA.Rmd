@@ -122,22 +122,6 @@ USmap_timelapse_DSCI_byState <- states %>%
 animate(USmap_timelapse_DSCI_byState, renderer = gifski_renderer(), duration = 20, start_pause = 2, end_pause = 2)
 ```
 
-```{r graph_USmap_timelapse_DSCI_byCounty, include = TRUE, message = FALSE, warning = FALSE}
-#create a US map and plot average DSCI 2000-2022
-USmap_timelapse_DSCI_byCounty <- states %>% 
-  left_join(drought_fips_yearlyAverage_county, by = c("NAME" = "state_name")) %>% 
-  ggplot(aes(fill = Avg_DSCI)) + 
- # labs(title = "2022 Average Drought Severity and Coverage Index (DSCI) by US State") +
-  geom_sf() +
-  scale_fill_continuous(type = "viridis") +
-  theme_bw() +
-  transition_states(Year, transition_length = 1, state_length = 3) +
-  labs(title = "Average Drought Severity and Coverage Index (DSCI) by US County",
-       subtitle = "Year: {closest_state}")
-
-animate(USmap_timelapse_DSCI_byCounty, renderer = gifski_renderer(), duration = 20)
-```
-
 
 
 
