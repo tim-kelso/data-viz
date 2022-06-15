@@ -119,7 +119,7 @@ USmap_timelapse_DSCI_byState <- states %>%
   labs(title = "Average Drought Severity and Coverage Index (DSCI) by US State",
        subtitle = "Year: {closest_state}")
 
-animate(USmap_timelapse_DSCI_byState, renderer = gifski_renderer(), duration = 20, start_pause = 2, end_pause = 2)
+animate(USmap_timelapse_DSCI_byState, renderer = gifski_renderer(), duration = 20)
 ```
 
 
