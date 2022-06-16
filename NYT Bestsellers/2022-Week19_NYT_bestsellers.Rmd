@@ -84,7 +84,7 @@ nyt_titles_orig %>%
   count(word, sort = TRUE) %>% 
   head(400) %>% #take top 400
   ggplot((aes(label = word, size = n, col = n))) +
-  geom_text_wordcloud(seed = 3590, family = "Gill Sans MT") + 
+  geom_text_wordcloud(seed = 3590, family = "Tw Cen MT") + 
   labs(title = "Most Common Words in NYT Bestsellers Titles")+
   scale_color_distiller(palette="Dark2") +
   theme_void()
@@ -97,7 +97,7 @@ nyt_titles_orig %>%
   arrange(desc(author_total_weeks)) %>% 
   head(200) %>% #take top 200 ()
   ggplot((aes(label = author, size = author_total_weeks, col = author_total_weeks))) +
-  geom_text_wordcloud(seed = 3590, family = "Gill Sans MT") + 
+  geom_text_wordcloud(seed = 3590, family = "Tw Cen MT") + 
   labs(title = "Bestselling Authors by Total Number of Weeks in Bestsellers List")+
   scale_color_distiller(palette="Dark2") +
   theme_void()
