@@ -1,7 +1,7 @@
-TidyTuesday Week 24: Drought Conditions in the US
+TidyTuesday Week 24, 2022: Drought Conditions in the US
 ================
 Tim Kelso
-15 June, 2022
+17 June, 2022
 
 # Background
 
@@ -49,8 +49,11 @@ FIPS id: first two digits = state, last 3 digits = county
 
 ## Graphs
 
-![](2022-Week24_Drought_USA_files/figure-gfm/graph_USmap_2022_DSCI_byState-1.png)<!-- -->
+![](2022-Week24_Drought_USA_files/figure-gfm/graph_annualDSCIaverage-1.png)<!-- -->
+
 ![](2022-Week24_Drought_USA_files/figure-gfm/graph_USmap_timelapse_DSCI_byState-1.gif)<!-- -->
+
+![](2022-Week24_Drought_USA_files/figure-gfm/graph_annualDSCIaverage_byState-1.gif)<!-- -->
 
 # Key Takeaways
 
@@ -59,6 +62,8 @@ FIPS id: first two digits = state, last 3 digits = county
     2000  
 -   In some years, drought is widespread. In other years, it is more
     localised.
+-   The average annual drought intensity across the US was highest in
+    2012 and lowest in 2019
 
 # Possible next steps
 

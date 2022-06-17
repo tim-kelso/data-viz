@@ -1,5 +1,5 @@
 ---
-title: "TidyTuesday: 27Apr2022"
+title: "TidyTuesday Week 17, 2022: Kaggle Hidden Gems"
 author: "Tim Kelso"
 output: github_document
 always_allow_html: true

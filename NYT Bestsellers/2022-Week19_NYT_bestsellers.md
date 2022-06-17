@@ -1,7 +1,7 @@
-TidyTuesday Week 19: NYT Bestsellers
+TidyTuesday Week 19, 2022: NYT Bestsellers
 ================
 Tim Kelso
-12 May, 2022
+17 June, 2022
 
 # Background
 

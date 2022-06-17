@@ -1,4 +1,4 @@
-TidyTuesday: 27Apr2022
+TidyTuesday Week 17, 2022: Kaggle Hidden Gems
 ================
 Tim Kelso
 
