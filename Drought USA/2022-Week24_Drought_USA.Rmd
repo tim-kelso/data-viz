@@ -19,6 +19,7 @@ library(tigris) #to download geographic boundaries from US Census Bureau
 library(sf)
 library(gganimate)
 library(gifski)
+library(ggforce)
 library(lubridate)
 library(tidyverse)
 ```
@@ -47,7 +48,9 @@ drought_fips_orig <- readr::read_csv('https://raw.githubusercontent.com/rfordata
 ## Initial thoughts  
 - What state has endured the most/least drought since 2000?  
 - Map of average DSCI for each state (heatmap) from 2000 - 2022
-- Extra credit: in which state/county have the most people been affected by drought?  
+- Map of average DSCI for each county (heatmap) from 2000 - 2022
+- Scatterplot/violin/density/raincloud plot of average DSCI by month (all counties/states)
+- Using additional census data, in which state/county have the most people been affected by drought?  
 
 
 ## Tables/Columns of potential interest:  
@@ -62,6 +65,13 @@ drought_fips_yearlyAverage_state <- drought_fips_orig %>%
   group_by(State, Year) %>% 
   summarise(Avg_DSCI = mean(DSCI, na.rm = TRUE)) %>% 
   left_join(fips_codes %>% distinct(state, state_name), by = c("State" = "state"))  #add state full name
+
+drought_fips_monthlyAverage_state <- drought_fips_orig %>% 
+  mutate(Month = month(date, label = TRUE)) %>% 
+  group_by(State, Month) %>% 
+  summarise(Avg_DSCI = mean(DSCI, na.rm = TRUE)) %>% 
+  left_join(fips_codes %>% distinct(state, state_name), by = c("State" = "state"))  #add state full name
+
 
 drought_fips_yearlyAverage_county <- drought_fips_orig %>% 
   mutate(Year = year(date)) %>% 
@@ -81,6 +91,51 @@ counties <- counties(cb = TRUE, class = "sf") %>%
 ```
 
 ## Graphs 
+### Examining drought using a monthly average of DSCI  
+I will begin by examining how different states experience drought across the year, using data from 2000 to 2022:  
+```{r graph_monthlyDSCIaverage_byState_fill, include = TRUE, message = FALSE, warning = FALSE, fig.width=6, fig.height=10}
+drought_fips_monthlyAverage_state  %>% 
+  ggplot(aes(x = Month, y = State, fill = Avg_DSCI)) +
+  geom_tile()+
+  scale_fill_viridis_c(option = "B", begin = 0.15, end = 0.98, name = "Average DSCI")+
+  scale_y_discrete(limits = rev) +
+  coord_cartesian(expand = F) +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.line = element_blank(),
+        axis.ticks = element_blank()) +
+  labs(title = "Drought Severity and Coverage Index (DSCI) monthly average (2000-2022)",
+       subtitle = "Drought severity peaks at different times of the year for different states")
+
+```
+Visualised over time here:  
+```{r graph_monthlyDSCIaverage_byState_density, include = TRUE, message = FALSE, warning = FALSE}
+US_timelapse_DSCI_byMonth <-drought_fips_orig %>% 
+  mutate(Year = year(date),
+         Month = month(date, label = TRUE)) %>% 
+  group_by(State, Year, Month) %>% 
+  summarise(Avg_DSCI = mean(DSCI, na.rm = TRUE)) %>% 
+  ggplot(aes(x = Month, y = Avg_DSCI, colour = Avg_DSCI)) +
+  geom_violin(color = "transparent", fill = "gray90") +
+  geom_sina(size = 0.95) +
+  scale_color_viridis_c(option = "B", begin = 0.15, end = 0.98) +
+  coord_cartesian(expand = F) +
+  theme_bw() +
+  theme(axis.title.x = element_blank(),
+        axis.line = element_blank(),
+        axis.ticks = element_blank(),
+        legend.position = "none") +
+  transition_states(Year) +
+  labs(title = "Drought Severity and Coverage Index (DSCI) monthly average",
+       subtitle = "Year: {closest_state}",
+       y = "Average DSCI")
+
+animate(US_timelapse_DSCI_byMonth,renderer = gifski_renderer(), duration = 30, height = 350, width = 600, units = "px")
+```
+### Examining drought using an annualised average of DSCI  
+This approach will demonstrate a broad yearly trend.  
+
+Here, I look at drought severity in the US as a whole,  
 ```{r graph_annualDSCIaverage, include = TRUE, message = FALSE, warning = FALSE}
 drought_fips_orig %>% 
   mutate(Year = year(date)) %>% 
@@ -90,12 +145,15 @@ drought_fips_orig %>%
   geom_line(colour = "grey")+
   geom_point(aes(group = seq_along(Year), colour = Avg_DSCI), size = 2) +
   scale_colour_viridis_b()+
-  theme_bw() +
-  theme(axis.title.x = element_blank()) +
+  scale_x_continuous(minor_breaks = seq(2000, 2022, 1)) +
+  theme_classic() +
+  theme(axis.title.x = element_blank(),
+        panel.grid.minor.x = element_line(),
+        panel.grid.major.x = element_line()) +
   labs(title = "Drought Severity and Coverage Index (DSCI) annual US average")
 
 ```
-
+and drought severity by State here:  
 ```{r graph_USmap_timelapse_DSCI_byState, include = TRUE, message = FALSE, warning = FALSE}
 #create a US map and plot average DSCI 2000-2022
 USmap_timelapse_DSCI_byState <- states %>% 
@@ -111,7 +169,7 @@ USmap_timelapse_DSCI_byState <- states %>%
 animate(USmap_timelapse_DSCI_byState, renderer = gifski_renderer(), duration = 20)
 ```
 
-
+and here:  
 ```{r graph_annualDSCIaverage_byState, include = TRUE, message = FALSE, warning = FALSE}
 US_timelapse_DSCI_byState <- drought_fips_yearlyAverage_state %>% 
   ggplot(aes(x = Avg_DSCI, y = state_name)) +
