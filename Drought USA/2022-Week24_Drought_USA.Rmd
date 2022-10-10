@@ -19,6 +19,7 @@ library(tigris) #to download geographic boundaries from US Census Bureau
 library(sf)
 library(gganimate)
 library(gifski)
+library(ggdist)
 library(ggforce)
 library(lubridate)
 library(tidyverse)
@@ -93,6 +94,47 @@ counties <- counties(cb = TRUE, class = "sf") %>%
 ## Graphs 
 ### Examining drought using a monthly average of DSCI  
 I will begin by examining how different states experience drought across the year, using data from 2000 to 2022:  
+
+``` {r raincloudPlots, fig.height = 5}
+plot <-
+  drought_fips_monthlyAverage_state %>% 
+  ggplot(aes(x = Month, y = Avg_DSCI)) + 
+  #create the half-violin plot for distribution
+  ggdist::stat_halfeye(
+    adjust = 0.5, 
+    width = 0.6, 
+    .width = 0, 
+    justification = -0.2, 
+    point_colour = NA) + 
+  #add boxplot to indicate mean
+#  geom_errorbar(aes(x = schoolGroup, ymin = mean, ymax = mean),
+ #   width = 0.25, 
+#    colour = "red"
+#  ) +
+  #add jittered raw data points
+  geom_point(#aes(colour = normValueGroup),
+    size = 1.5,
+    #alpha = 0.8,
+    position = position_jitter(
+      seed = 1, width = 0.1
+    )
+  ) + 
+ # scale_colour_discrete(labels = c("High (>8 to 10)", "Mid (>5 to 8)", "Low (0 to 5)"), 
+#                       type = c(QTcolours %>% filter(colour == "indigo", shade %% 40 == 0, shade <= 120) %>% pull(hexCode) %>% #rev()))+
+  labs(title = "Average drought levels tend to be highest across the US in September and October") +
+  theme(axis.title = element_blank(),
+        axis.text.y = element_text(size = 10),
+        axis.line.x = element_blank(),
+        title = element_text(size = 10))+
+  theme_classic() +
+  scale_x_discrete(limits = rev)+
+#  scale_y_continuous(breaks = c(0:10))+
+  coord_flip(xlim = c(1.2, NA), clip = "off")
+#             ylim = c(0,10))
+print(plot)
+
+```
+
 ```{r graph_monthlyDSCIaverage_byState_fill, include = TRUE, message = FALSE, warning = FALSE, fig.width=6, fig.height=10}
 drought_fips_monthlyAverage_state  %>% 
   ggplot(aes(x = Month, y = State, fill = Avg_DSCI)) +
