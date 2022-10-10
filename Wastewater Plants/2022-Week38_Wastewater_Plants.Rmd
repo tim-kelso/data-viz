@@ -1,0 +1,76 @@
+---
+title: "Wastewater plants in USA: TidyTuesday Week 18, 2022"
+author: "Tim Kelso"  
+date: "`r format(Sys.time(), '%d %B, %Y')`"  
+output: github_document
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = FALSE)
+```
+
+```{r libraries}
+library(DataExplorer)
+library(tidytext)
+library(lubridate)
+library(tidyverse)
+```
+# Background 
+## Data source
+https://essd.copernicus.org/articles/14/559/2022/#section4
+
+Ehalt Macedo, H., Lehner, B., Nicell, J., Grill, G., Li, J., Limtong, A., and Shakya, R.: Distribution and characteristics of wastewater treatment plants within the global river network, Earth Syst. Sci. Data, 14, 559–577, https://doi.org/10.5194/essd-14-559-2022, 2022.
+
+## Data information
+The main objective of wastewater treatment plants (WWTPs) is to remove pathogens, nutrients, organics, and other pollutants from wastewater. After these contaminants are partially or fully removed through physical, biological, and/or chemical processes, the treated effluents are discharged into receiving waterbodies. However, since WWTPs cannot remove all contaminants, especially those of emerging concern, they inevitably represent concentrated point sources of residual contaminant loads into surface waters. 
+
+To understand the severity and extent of the impact of treated-wastewater discharges from such facilities into rivers and lakes, as well as to identify opportunities of improved management, detailed information about WWTPs is required, including (1) their explicit geospatial locations to identify the waterbodies affected and (2) individual plant characteristics such as the population served, flow rate of effluents, and level of treatment of processed wastewater. These characteristics are especially important for contaminant fate models that are designed to assess the distribution of substances that are not typically included in environmental monitoring programs. 
+
+Although there are several regional datasets that provide information on WWTP locations and characteristics, data are still lacking at a global scale, especially in developing countries. Here we introduce a spatially explicit global database, termed HydroWASTE, containing 58,502 WWTPs and their characteristics. This database was developed by combining national and regional datasets with auxiliary information to derive or complete missing WWTP characteristics, including the number of people served. A high-resolution river network with streamflow estimates was used to georeference WWTP outfall locations and calculate each plant's dilution factor (i.e., the ratio of the natural discharge of the receiving waterbody to the WWTP effluent discharge). The utility of this information was demonstrated in an assessment of the distribution of treated wastewater at a global scale. Results show that 1,200,000 km of the global river network receives wastewater input from upstream WWTPs, of which more than 90 000 km is downstream of WWTPs that offer only primary treatment. Wastewater ratios originating from WWTPs exceed 10 % in over 72,000 km of rivers, mostly in areas of high population densities in Europe, the USA, China, India, and South Africa. In addition, 2533 plants show a dilution factor of less than 10, which represents a common threshold for environmental concern.
+
+
+```{r get_data}
+# Get the Data
+HydroWASTE_v10 <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-09-20/HydroWASTE_v10.csv')
+
+HydroWASTE_v10_orig <- HydroWASTE_v10
+```
+
+# Initial thoughts  
+## Data  
+-   
+-   
+-   
+-   
+
+## Key questions  
+1.  
+2. 
+
+# Analysis  
+## Graphs of potential interest  
+
+
+
+## Graphs
+```{r data_transformation}
+
+```
+
+```{r plot_1, include = TRUE, message = FALSE}
+
+```
+```{r plot_1, include = TRUE, message = FALSE}
+
+```
+
+# Key Takeaways  
+-    
+- 
+-    
+
+# Possible next steps  
+-   
+-  
+- 
