@@ -20,10 +20,10 @@ library(tidyverse)
 Data from Australian Curriculum, Assessment and Reporting Authority (ACARA) (https://acara.edu.au/contact-us/acara-data-access).  
 
 ## Data information  
-*ACARA_school_location_*.xlsx*
+*ACARA_school_location_.xlsx*
 List of all Australian schools, Long/Lat, LGA
 
-*ACARA_school_profile_*.xlsx*
+*ACARA_school_profile_.xlsx*
 List of all Australian schools, enrolments, ICSEA, LBOTE, SEA
 
 
@@ -53,7 +53,8 @@ schoolProfile_2021 <- read_excel("ACARA_school_profile_2021.xlsx", sheet = "Scho
 schoolLocation_yearly <- schoolLocation_2019  %>%
   bind_rows(schoolLocation_2020, schoolLocation_2021, schoolLocation_2022) %>% 
   mutate(across(.cols = c(State, Campus.Type:Rolled.Reporting.Description, ABS.Remoteness.Area.Name), .fns = as.factor)) %>% 
-  mutate(School.Sector = factor(School.Sector, levels = c("Government", "Catholic", "Independent")),
+  mutate(ABS.Remoteness.Area.Name = factor(ABS.Remoteness.Area.Name, levels = c("Major Cities", "Inner Regional", "Outer Regional", "Remote", "Very Remote"), ordered = TRUE),
+         School.Sector = factor(School.Sector, levels = c("Government", "Catholic", "Independent")),
          School.Type = factor(School.Type, levels = c("Primary", "Secondary", "Combined", "Special")))
 
 schoolProfile_yearly <- schoolProfile_yearly  %>%
@@ -63,67 +64,243 @@ schoolProfile_yearly <- schoolProfile_yearly  %>%
          School.Type = factor(School.Type, levels = c("Primary", "Secondary", "Combined", "Special")))
 ```
 ## Graphs 
-### Examining drought using a monthly average of DSCI  
-I'll start by examining how different states gained/lost schools using school_location data from 2019 to 2022:  
+### Total number of schools in Australia 2019-2022  
+I'll start with a simple count of total schools in Australia using school_location data from 2019 to 2022:  
 
-``` {r uniqueSchools}
+``` {r uniqueSchools, include = TRUE, message = FALSE}
 schoolLocation_yearly %>% 
   group_by(Calendar.Year) %>% 
-  summarise(n = n())
-  #arrange(ACARA.SML.ID, Calendar.Year) %>% 
-  #mutate(index = rank(Calendar.Year, ties.method = "first"),
-  #       maxIndex = max(index),
-  #       firstYear = min(Calendar.Year),
-  #       finalYear = max(Calendar.Year),
-  #       schoolOpen = ifelse(finalYear >= Calendar.Year, "Yes", "No"),
-  #       status = case_when(
-   #        index == 1 ~ "New",
-   #        index >= 2 ~ "Existing"
-  #       )) %>% 
-  #ungroup() %>% 
-  #count(ACARA.SML.ID, firstYear, finalYear)
-#  filter(maxIndex < 14, firstYear == 2008)
-  #group_by(Calendar.Year, status) %>% 
-  #summarise(n = n()) %>% 
-  ungroup() %>% 
-#i suspect that schools that are not in existence in 2021 are not included in this list - it seems uncanny that all schools in this list have their final year as 2021, indicating that no schools have closed permanently since the list started
-  ggplot(aes(x = Calendar.Year, y = n, grouping = status)) +
-  geom_col(aes(fill = status)) +
-  geom_text(aes(label = n), size = 2.5, vjust = -0.5)+
-  theme_classic() +
-  labs(title = "Number of Australian Schools by Year",
-       y = "Count") +
-  theme(axis.title.x = element_blank()) + 
-  #scale_x_continuous(breaks = c(2008, 2010, 2012, 2014, 2016, 2018, 2020))+
-  ylim(0, 10000)+
-  coord_cartesian(expand = FALSE)
+  summarise(n = n()) %>% 
+  pivot_wider(names_from = Calendar.Year, values_from = n)
+```
+
+### Gained and lost schools 2019-2022
+The above shows the final number of schools each year. Let's find how many schools were lost and gained in each year from 2019 onwards.
+
+```{r gained_lost,  include = TRUE, message = FALSE}
+#anti-join
+schoolsGained_2020 <- schoolLocation_2020 %>% 
+  anti_join(schoolLocation_2019, by = "ACARA.SML.ID") %>% 
+  count() %>% 
+  mutate(Calendar.Year = 2020,
+         Group = "Gained")
+
+schoolsLost_2020 <- schoolLocation_2019 %>% 
+  anti_join(schoolLocation_2020, by = "ACARA.SML.ID") %>% 
+  count() %>% 
+  mutate(Calendar.Year = 2020,
+         Group = "Lost")
+
+
+schoolsGained_2021 <- schoolLocation_2021 %>% 
+  anti_join(schoolLocation_2020, by = "ACARA.SML.ID") %>% 
+  count() %>% 
+  mutate(Calendar.Year = 2021,
+         Group = "Gained")
+
+schoolsLost_2021 <- schoolLocation_2020 %>% 
+  anti_join(schoolLocation_2021, by = "ACARA.SML.ID") %>% 
+  count() %>% 
+  mutate(Calendar.Year = 2021,
+         Group = "Lost")
+
+
+schoolsGained_2022 <- schoolLocation_2022 %>% 
+  anti_join(schoolLocation_2021, by = "ACARA.SML.ID") %>% 
+  count() %>% 
+  mutate(Calendar.Year = 2022,
+         Group = "Gained")
+
+schoolsLost_2022 <- schoolLocation_2021 %>% 
+  anti_join(schoolLocation_2022, by = "ACARA.SML.ID") %>% 
+  count() %>% 
+  mutate(Calendar.Year = 2022,
+         Group = "Lost")
+
+schoolsGained_2020 %>% 
+  bind_rows(schoolsLost_2020, schoolsGained_2021, schoolsLost_2021, schoolsGained_2022, schoolsLost_2022) %>% 
+  mutate(n = if_else(Group == "Lost", -n, n)) %>% 
+  ggplot(aes(x = as.factor(Calendar.Year), y = n, group = Group)) +
+  geom_col(aes(fill = Group), position = "stack") +
+  geom_text(aes(label = n), vjust = 0, size = 5) +
+  geom_hline(yintercept = 0) +
+  scale_fill_manual(values = c("#3E6990", "#F39B6D"))+
+  theme_classic()+
+  labs(title = "~2x the number of schools are established than lost each year",
+       y = "Number of schools") +
+  theme(axis.title.x = element_blank(),
+        axis.text = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.text = element_text(size = 9))
+```
+### Did major cities or regional areas gain or lose more schools?  
+```{r gained_lost_byRegion_aggregated, include = TRUE, message = FALSE, dpi = 300}
+#anti-join
+schoolsGained_2020 <- schoolLocation_2020 %>% 
+  anti_join(schoolLocation_2019, by = "ACARA.SML.ID") %>% 
+  mutate(Region = case_when(
+    ABS.Remoteness.Area.Name == "Major Cities" ~ "Major Cities",
+    TRUE ~ "Regional"
+  )) %>% 
+  group_by(Region) %>% 
+  count() %>% 
+  mutate(Calendar.Year = 2020,
+         Group = "Gained"
+         )
+
+schoolsLost_2020 <- schoolLocation_2019 %>% 
+  anti_join(schoolLocation_2020, by = "ACARA.SML.ID") %>% 
+  mutate(Region = case_when(
+    ABS.Remoteness.Area.Name == "Major Cities" ~ "Major Cities",
+    TRUE ~ "Regional"
+  )) %>% 
+  group_by(Region) %>% 
+  count() %>% 
+  mutate(Calendar.Year = 2020,
+         Group = "Lost")
+
+
+schoolsGained_2021 <- schoolLocation_2021 %>% 
+  anti_join(schoolLocation_2020, by = "ACARA.SML.ID") %>% 
+  mutate(Region = case_when(
+    ABS.Remoteness.Area.Name == "Major Cities" ~ "Major Cities",
+    TRUE ~ "Regional"
+  )) %>% 
+  group_by(Region) %>% 
+  count() %>% 
+  mutate(Calendar.Year = 2021,
+         Group = "Gained")
+
+schoolsLost_2021 <- schoolLocation_2020 %>% 
+  anti_join(schoolLocation_2021, by = "ACARA.SML.ID") %>% 
+  mutate(Region = case_when(
+    ABS.Remoteness.Area.Name == "Major Cities" ~ "Major Cities",
+    TRUE ~ "Regional"
+  )) %>% 
+  group_by(Region) %>% 
+  count() %>% 
+  mutate(Calendar.Year = 2021,
+         Group = "Lost")
+
+
+schoolsGained_2022 <- schoolLocation_2022 %>% 
+  anti_join(schoolLocation_2021, by = "ACARA.SML.ID") %>% 
+  mutate(Region = case_when(
+    ABS.Remoteness.Area.Name == "Major Cities" ~ "Major Cities",
+    TRUE ~ "Regional"
+  )) %>% 
+  group_by(Region) %>% 
+  count() %>% 
+  mutate(Calendar.Year = 2022,
+         Group = "Gained")
+
+schoolsLost_2022 <- schoolLocation_2021 %>% 
+  anti_join(schoolLocation_2022, by = "ACARA.SML.ID") %>% 
+  mutate(Region = case_when(
+    ABS.Remoteness.Area.Name == "Major Cities" ~ "Major Cities",
+    TRUE ~ "Regional"
+  )) %>% 
+  group_by(Region) %>% 
+  count() %>%  
+  mutate(Calendar.Year = 2022,
+         Group = "Lost")
+
+schoolsGained_2020 %>% 
+  bind_rows(schoolsLost_2020, schoolsGained_2021, schoolsLost_2021, schoolsGained_2022, schoolsLost_2022) %>% 
+  mutate(n = if_else(Group == "Lost", -n, n)) %>% 
+  ggplot(aes(x = Calendar.Year, y = n, group = Group)) +
+  geom_col(aes(fill = Group), position = "stack") +
+  geom_text(aes(label = n), vjust = 0) +
+  geom_hline(yintercept = 0) +
+  scale_fill_manual(values = c("#3E6990", "#F39B6D"))+
+#  scale_x_discrete(position = "top") +
+  theme_classic()+
+  labs(title = "2-3x more schools are established each year in major cities than regional areas",
+       y = "Number of schools gained/lost") +
+  theme(title = element_text(face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.text = element_text(size = 9),
+        strip.text = element_text(size = 12)) +
+  facet_wrap(vars(Region))
+
+ggsave("./images/Established schools in major cities and regional areas.png", width = 8, dpi = 300)
+```
+
+### Which regional areas gain or lose more schools?  
+```{r gained_lost_byRegion,  include = TRUE, message = FALSE, fig.height = 8}
+schoolsGained_2020 <- schoolLocation_2020 %>% 
+  anti_join(schoolLocation_2019, by = "ACARA.SML.ID") %>% 
+  group_by(ABS.Remoteness.Area.Name) %>% 
+  count() %>% 
+  mutate(Calendar.Year = 2020,
+         Group = "Gained"
+         )
+
+schoolsLost_2020 <- schoolLocation_2019 %>% 
+  anti_join(schoolLocation_2020, by = "ACARA.SML.ID") %>% 
+  group_by(ABS.Remoteness.Area.Name) %>% 
+  count() %>% 
+  mutate(Calendar.Year = 2020,
+         Group = "Lost")
+
+
+schoolsGained_2021 <- schoolLocation_2021 %>% 
+  anti_join(schoolLocation_2020, by = "ACARA.SML.ID") %>% 
+  group_by(ABS.Remoteness.Area.Name) %>%  
+  count() %>% 
+  mutate(Calendar.Year = 2021,
+         Group = "Gained")
+
+schoolsLost_2021 <- schoolLocation_2020 %>% 
+  anti_join(schoolLocation_2021, by = "ACARA.SML.ID") %>% 
+  group_by(ABS.Remoteness.Area.Name) %>% 
+  count() %>% 
+  mutate(Calendar.Year = 2021,
+         Group = "Lost")
+
+
+schoolsGained_2022 <- schoolLocation_2022 %>% 
+  anti_join(schoolLocation_2021, by = "ACARA.SML.ID") %>% 
+  group_by(ABS.Remoteness.Area.Name) %>% 
+  count() %>% 
+  mutate(Calendar.Year = 2022,
+         Group = "Gained")
+
+schoolsLost_2022 <- schoolLocation_2021 %>% 
+  anti_join(schoolLocation_2022, by = "ACARA.SML.ID") %>% 
+  group_by(ABS.Remoteness.Area.Name) %>% 
+  count() %>%  
+  mutate(Calendar.Year = 2022,
+         Group = "Lost")
+
+schoolsGained_2020 %>% 
+  bind_rows(schoolsLost_2020, schoolsGained_2021, schoolsLost_2021, schoolsGained_2022, schoolsLost_2022) %>% 
+  mutate(n = if_else(Group == "Lost", -n, n),
+         ABS.Remoteness.Area.Name = factor(ABS.Remoteness.Area.Name, levels = c("Major Cities", "Inner Regional", "Outer Regional", "Remote", "Very Remote"), ordered = TRUE)) %>% 
+  ggplot(aes(x = Calendar.Year, y = n, group = Group)) +
+  geom_col(aes(fill = Group), position = "stack") +
+  geom_text(aes(label = n), vjust = 0) +
+  geom_hline(yintercept = 0) +
+  scale_fill_manual(values = c("#3E6990", "#F39B6D"))+
+#  scale_x_discrete(position = "top") +
+  theme_classic()+
+  labs(title = "",
+       y = "Number of schools gained/lost") +
+  theme(axis.title.x = element_blank(),
+        axis.text = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.text = element_text(size = 9),
+        strip.text = element_text(size = 12)) +
+  facet_wrap(nrow = 1, vars(ABS.Remoteness.Area.Name))
 ```
 
 
-```{r comparison of profile and location lists}
-schoolLocation_2021 %>% 
-  summarise(n = n())
-
-schoolProfile_2021 %>% 
-  summarise(n = n())
-
-schoolsInLocationListOnly <- schoolLocation_2021 %>% 
-  anti_join(schoolList_profile_2021, by = "ACARA.SML.ID") 
-
-#comparison of ACARAs not in dynamics with schools only on location list
-ACARAs_NotInDynamics %>% 
-  anti_join(schoolsInLocationListOnly, by = c("Acara" = "ACARA.SML.ID")) %>% 
-  summarise(n = n())
-
-#write.csv(schoolsInLocationListOnly, "../../QTA/data_raw/ACARAList_ToLoadInDynamics.csv")
-```
 
 # Key Takeaways  
-- Drought intensity varies greatly by state and year
-- California has experienced some of the most intense droughts since 2000  
-- In some years, drought is widespread. In other years, it is more localised.
-- The average annual drought intensity across the US was highest in 2012 and lowest in 2019
+-	Most new schools are established in major cities, with a net growth in the total number of schools  
+- Some schools are established in regional areas, but this is offset by an equivalent number of schools that are lost  
+
 
 # Possible next steps  
-- Examine/visualise data at monthly average drought intensity rather than current annual average
-- Integration of population data - where are the most people affected by drought?  
