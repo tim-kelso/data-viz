@@ -49,7 +49,9 @@ The above shows the final number of schools each year. Let’s find how
 many schools were lost and gained in each year from 2019 onwards.
 
 ![](2023-Week15_Regionality_NewSchools_files/figure-gfm/gained_lost-1.png)<!-- -->
-\### Did major cities or regional areas gain or lose more schools?  
+
+### Did major cities or regional areas gain or lose more schools?
+
 ![](2023-Week15_Regionality_NewSchools_files/figure-gfm/gained_lost_byRegion_aggregated-1.png)<!-- -->
 
 ### Which regional areas gain or lose more schools?

@@ -133,7 +133,9 @@ schoolsGained_2020 %>%
         legend.title = element_blank(),
         legend.text = element_text(size = 9))
 ```
+
 ### Did major cities or regional areas gain or lose more schools?  
+
 ```{r gained_lost_byRegion_aggregated, include = TRUE, message = FALSE, dpi = 300}
 #anti-join
 schoolsGained_2020 <- schoolLocation_2020 %>% 
