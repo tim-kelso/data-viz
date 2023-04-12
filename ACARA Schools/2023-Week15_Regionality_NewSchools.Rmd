@@ -1,0 +1,129 @@
+---
+title: "2023, Week 15: Regionality of new and disestablished schools"
+author: "Tim Kelso"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: github_document
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = FALSE)
+```
+
+```{r libraries}
+library(lubridate)
+library(readxl)
+library(tidyverse)
+```
+# Background 
+## Data source  
+Data from Australian Curriculum, Assessment and Reporting Authority (ACARA) (https://acara.edu.au/contact-us/acara-data-access).  
+
+## Data information  
+*ACARA_school_location_*.xlsx*
+List of all Australian schools, Long/Lat, LGA
+
+*ACARA_school_profile_*.xlsx*
+List of all Australian schools, enrolments, ICSEA, LBOTE, SEA
+
+
+```{r get_data}
+# Get the Data
+schoolProfile_yearly <- read_excel("ACARA_school_profile_2008-2022.xlsx", sheet = "SchoolProfile 2008-2022", .name_repair = "universal")
+schoolLocation_2022 <- read_excel("ACARA_school_location_2022.xlsx", sheet = "SchoolLocations 2022", .name_repair = "universal") %>% mutate(Calendar.Year = 2022)
+schoolLocation_2021 <- read_excel("ACARA_school_location_2021.xlsx", sheet = "SchoolLocations 2021", .name_repair = "universal")%>% mutate(Calendar.Year = 2021)
+schoolLocation_2020 <- read_excel("ACARA_school_location_2020.xlsx", sheet = "SchoolLocations 2020", .name_repair = "universal")%>% mutate(Calendar.Year = 2020)
+schoolLocation_2019 <- read_excel("ACARA_school_location_2019.xlsx", sheet = "School Location 2019", .name_repair = "universal")%>% mutate(Calendar.Year = 2019)
+schoolProfile_2022 <- read_excel("ACARA_school_profile_2022.xlsx", sheet = "SchoolProfile 2022", .name_repair = "universal")
+schoolProfile_2021 <- read_excel("ACARA_school_profile_2021.xlsx", sheet = "SchoolProfile 2021", .name_repair = "universal")
+```
+
+# Analysis  
+## Initial thoughts  
+- What state has gained the most/least number of schools since 2019?  
+- How many schools were gained in major cities vs regional areas?
+- How many schools were lost in major cities vs regional areas?
+
+## Columns of potential interest:  
+- Geolocation    
+- ICSEA  
+
+```{r data_prep}
+#create school_location list combining data from 2019-2022
+schoolLocation_yearly <- schoolLocation_2019  %>%
+  bind_rows(schoolLocation_2020, schoolLocation_2021, schoolLocation_2022) %>% 
+  mutate(across(.cols = c(State, Campus.Type:Rolled.Reporting.Description, ABS.Remoteness.Area.Name), .fns = as.factor)) %>% 
+  mutate(School.Sector = factor(School.Sector, levels = c("Government", "Catholic", "Independent")),
+         School.Type = factor(School.Type, levels = c("Primary", "Secondary", "Combined", "Special")))
+
+schoolProfile_yearly <- schoolProfile_yearly  %>%
+  mutate(across(.cols = c(State, Campus.Type:Rolled.Reporting.Description, Governing.Body, Year.Range), .fns = as.factor)) %>% 
+  mutate(Geolocation = factor(Geolocation, levels = c("Major Cities", "Inner Regional", "Outer Regional", "Remote", "Very Remote"), ordered = TRUE),
+         School.Sector = factor(School.Sector, levels = c("Government", "Catholic", "Independent")),
+         School.Type = factor(School.Type, levels = c("Primary", "Secondary", "Combined", "Special")))
+```
+## Graphs 
+### Examining drought using a monthly average of DSCI  
+I'll start by examining how different states gained/lost schools using school_location data from 2019 to 2022:  
+
+``` {r uniqueSchools}
+schoolLocation_yearly %>% 
+  group_by(Calendar.Year) %>% 
+  summarise(n = n())
+  #arrange(ACARA.SML.ID, Calendar.Year) %>% 
+  #mutate(index = rank(Calendar.Year, ties.method = "first"),
+  #       maxIndex = max(index),
+  #       firstYear = min(Calendar.Year),
+  #       finalYear = max(Calendar.Year),
+  #       schoolOpen = ifelse(finalYear >= Calendar.Year, "Yes", "No"),
+  #       status = case_when(
+   #        index == 1 ~ "New",
+   #        index >= 2 ~ "Existing"
+  #       )) %>% 
+  #ungroup() %>% 
+  #count(ACARA.SML.ID, firstYear, finalYear)
+#  filter(maxIndex < 14, firstYear == 2008)
+  #group_by(Calendar.Year, status) %>% 
+  #summarise(n = n()) %>% 
+  ungroup() %>% 
+#i suspect that schools that are not in existence in 2021 are not included in this list - it seems uncanny that all schools in this list have their final year as 2021, indicating that no schools have closed permanently since the list started
+  ggplot(aes(x = Calendar.Year, y = n, grouping = status)) +
+  geom_col(aes(fill = status)) +
+  geom_text(aes(label = n), size = 2.5, vjust = -0.5)+
+  theme_classic() +
+  labs(title = "Number of Australian Schools by Year",
+       y = "Count") +
+  theme(axis.title.x = element_blank()) + 
+  #scale_x_continuous(breaks = c(2008, 2010, 2012, 2014, 2016, 2018, 2020))+
+  ylim(0, 10000)+
+  coord_cartesian(expand = FALSE)
+```
+
+
+```{r comparison of profile and location lists}
+schoolLocation_2021 %>% 
+  summarise(n = n())
+
+schoolProfile_2021 %>% 
+  summarise(n = n())
+
+schoolsInLocationListOnly <- schoolLocation_2021 %>% 
+  anti_join(schoolList_profile_2021, by = "ACARA.SML.ID") 
+
+#comparison of ACARAs not in dynamics with schools only on location list
+ACARAs_NotInDynamics %>% 
+  anti_join(schoolsInLocationListOnly, by = c("Acara" = "ACARA.SML.ID")) %>% 
+  summarise(n = n())
+
+#write.csv(schoolsInLocationListOnly, "../../QTA/data_raw/ACARAList_ToLoadInDynamics.csv")
+```
+
+# Key Takeaways  
+- Drought intensity varies greatly by state and year
+- California has experienced some of the most intense droughts since 2000  
+- In some years, drought is widespread. In other years, it is more localised.
+- The average annual drought intensity across the US was highest in 2012 and lowest in 2019
+
+# Possible next steps  
+- Examine/visualise data at monthly average drought intensity rather than current annual average
+- Integration of population data - where are the most people affected by drought?  
