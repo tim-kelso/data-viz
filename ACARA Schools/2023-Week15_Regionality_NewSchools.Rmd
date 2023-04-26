@@ -8,9 +8,7 @@ always_allow_html: true
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, include = FALSE)
-```
 
-```{r libraries}
 library(lubridate)
 library(readxl)
 library(tidyverse)
@@ -124,7 +122,7 @@ schoolsGained_2020 %>%
   geom_col(aes(fill = Group), position = "stack") +
   geom_text(aes(label = n), vjust = 0, size = 5) +
   geom_hline(yintercept = 0) +
-  scale_fill_manual(values = c("#3E6990", "#F39B6D"))+
+  scale_fill_manual(values = c("#3E6990", "#F39B6D", ))+
   theme_classic()+
   labs(title = "~2x the number of schools are established than lost each year",
        y = "Number of schools") +
@@ -132,6 +130,77 @@ schoolsGained_2020 %>%
         axis.text = element_text(size = 10),
         legend.title = element_blank(),
         legend.text = element_text(size = 9))
+```
+### Which school systems gain or lose more schools?  
+```{r gained_lost_bySystem,  include = TRUE, message = FALSE, fig.height = 8}
+schoolsGained_2020 <- schoolLocation_2020 %>% 
+  anti_join(schoolLocation_2019, by = "ACARA.SML.ID") %>% 
+  group_by(School.Sector) %>% 
+  count() %>% 
+  mutate(Calendar.Year = 2020,
+         Group = "Gained"
+         )
+
+schoolsLost_2020 <- schoolLocation_2019 %>% 
+  anti_join(schoolLocation_2020, by = "ACARA.SML.ID") %>% 
+  group_by(School.Sector) %>% 
+  count() %>% 
+  mutate(Calendar.Year = 2020,
+         Group = "Lost")
+
+
+schoolsGained_2021 <- schoolLocation_2021 %>% 
+  anti_join(schoolLocation_2020, by = "ACARA.SML.ID") %>% 
+  group_by(School.Sector) %>%  
+  count() %>% 
+  mutate(Calendar.Year = 2021,
+         Group = "Gained")
+
+schoolsLost_2021 <- schoolLocation_2020 %>% 
+  anti_join(schoolLocation_2021, by = "ACARA.SML.ID") %>% 
+  group_by(School.Sector) %>% 
+  count() %>% 
+  mutate(Calendar.Year = 2021,
+         Group = "Lost")
+
+
+schoolsGained_2022 <- schoolLocation_2022 %>% 
+  anti_join(schoolLocation_2021, by = "ACARA.SML.ID") %>% 
+  group_by(School.Sector) %>% 
+  count() %>% 
+  mutate(Calendar.Year = 2022,
+         Group = "Gained")
+
+schoolsLost_2022 <- schoolLocation_2021 %>% 
+  anti_join(schoolLocation_2022, by = "ACARA.SML.ID") %>% 
+  group_by(School.Sector) %>% 
+  count() %>%  
+  mutate(Calendar.Year = 2022,
+         Group = "Lost")
+
+schoolsGained_2020 %>% 
+  bind_rows(schoolsLost_2020, schoolsGained_2021, schoolsLost_2021, schoolsGained_2022, schoolsLost_2022) %>% 
+  mutate(n = if_else(Group == "Lost", -n, n),
+         School.Sector = factor(School.Sector, levels = c("Government", "Catholic", "Independent"), ordered = TRUE)) %>% 
+  ggplot(aes(x = Calendar.Year, y = n, alpha = Group)) +
+  geom_col(aes(fill = School.Sector), position = "stack") +
+  geom_text(aes(label = n, vjust = if_else(Group == "Gained", 0, 1))) +
+  geom_hline(yintercept = 0) +
+  scale_fill_manual(values = c("#381D2A",	"#3E6990",	"#AABD8C")) +
+  scale_alpha_discrete(range = c(1, 0.7))+
+#  scale_x_discrete(position = "top") +
+  theme_classic()+
+  labs(title = "~50% of schools established in the last three years were Independent schools",
+       y = "Number of schools gained/lost") +
+  theme(axis.title.x = element_blank(),
+        axis.text = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.position = "none",
+        legend.text = element_text(size = 9),
+        strip.text = element_text(size = 12)) +
+  facet_wrap(nrow = 1, vars(School.Sector))
+
+ggsave("./images/Established schools by sector.png", width = 15, dpi = 300)
 ```
 
 ### Did major cities or regional areas gain or lose more schools?  
@@ -281,21 +350,25 @@ schoolsGained_2020 %>%
   bind_rows(schoolsLost_2020, schoolsGained_2021, schoolsLost_2021, schoolsGained_2022, schoolsLost_2022) %>% 
   mutate(n = if_else(Group == "Lost", -n, n),
          ABS.Remoteness.Area.Name = factor(ABS.Remoteness.Area.Name, levels = c("Major Cities", "Inner Regional", "Outer Regional", "Remote", "Very Remote"), ordered = TRUE)) %>% 
-  ggplot(aes(x = Calendar.Year, y = n, group = Group)) +
-  geom_col(aes(fill = Group), position = "stack") +
-  geom_text(aes(label = n), vjust = 0) +
+  ggplot(aes(x = Calendar.Year, y = n, alpha = Group)) +
+  geom_col(aes(fill = ABS.Remoteness.Area.Name), position = "stack") +
+  geom_text(aes(label = n, vjust = if_else(Group == "Gained", 0, 1))) +
   geom_hline(yintercept = 0) +
-  scale_fill_manual(values = c("#3E6990", "#F39B6D"))+
+  scale_alpha_discrete(range = c(1, 0.7))+
+  scale_fill_manual(values = c("#090c08",	"#474056",	"#757083",	"#8a95a5",	"#b9c6ae"))+
 #  scale_x_discrete(position = "top") +
   theme_classic()+
-  labs(title = "",
+  labs(title = "Remote and very remote areas did not gain/lose many schools",
        y = "Number of schools gained/lost") +
   theme(axis.title.x = element_blank(),
         axis.text = element_text(size = 10),
         legend.title = element_blank(),
+        legend.position = "none",
         legend.text = element_text(size = 9),
         strip.text = element_text(size = 12)) +
   facet_wrap(nrow = 1, vars(ABS.Remoteness.Area.Name))
+
+ggsave("./images/Established schools in all areas.png", width = 15, dpi = 300)
 ```
 
 
