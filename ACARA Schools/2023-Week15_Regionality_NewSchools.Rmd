@@ -122,7 +122,7 @@ schoolsGained_2020 %>%
   geom_col(aes(fill = Group), position = "stack") +
   geom_text(aes(label = n), vjust = 0, size = 5) +
   geom_hline(yintercept = 0) +
-  scale_fill_manual(values = c("#3E6990", "#F39B6D", ))+
+  scale_fill_manual(values = c("#3E6990", "#F39B6D"))+
   theme_classic()+
   labs(title = "~2x the number of schools are established than lost each year",
        y = "Number of schools") +
